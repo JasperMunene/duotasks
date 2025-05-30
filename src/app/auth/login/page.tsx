@@ -29,7 +29,7 @@ export default function LoginPage() {
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
 
-    const form = useForm<LoginFormValues>({
+    const form = useForm({
         resolver: zodResolver(loginSchema),
         defaultValues: {
             email: '',
@@ -40,25 +40,48 @@ export default function LoginPage() {
 
     const onSubmit = async (values: LoginFormValues) => {
         setIsLoading(true);
-
         try {
-            // Simulate API call
-            await new Promise((resolve) => setTimeout(resolve, 1500));
-
-            // Success notification
-            toast({
-                title: 'Success!',
-                description: 'You have been logged in.',
+            const res = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include',
+                body: JSON.stringify({
+                    email: values.email,
+                    password: values.password,
+                    rememberMe: values.rememberMe,
+                }),
             });
 
-            // Redirect to dashboard
-            router.push('/dashboard');
-        } catch (error) {
-            console.error('Login error:', error);
+            const payload = await res.json();
+
+            if (!res.ok) {
+                toast({
+                    variant: 'destructive',
+                    title: 'Error',
+                    description: payload.message || 'Invalid email or password. Please try again.',
+                });
+                return;
+            }
+
+            toast({
+                title: 'Success!',
+                description: payload.message || 'You have been logged in.',
+            });
+
+            router.push('/discover');
+        } catch (err: unknown) {
+            const errorMessage =
+                err instanceof Error
+                    ? err.message
+                    : 'Invalid email or password. Please try again.';
+
+            console.error('Login error:', err);
             toast({
                 variant: 'destructive',
                 title: 'Error',
-                description: 'Invalid email or password. Please try again.',
+                description: errorMessage,
             });
         } finally {
             setIsLoading(false);
@@ -167,7 +190,7 @@ export default function LoginPage() {
             <GoogleButton />
 
             <div className="mt-6 text-center text-sm">
-                <span className="text-muted-foreground">Don't have an account?</span>{' '}
+                <span className="text-muted-foreground">Don&apos;t have an account?</span>{' '}
                 <Link
                     href="/auth/signup"
                     className="font-medium text-primary hover:text-primary/80 transition-colors"

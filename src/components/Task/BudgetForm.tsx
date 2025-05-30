@@ -1,13 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { ArrowLeft, ArrowRight, DollarSign, CreditCard } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CreditCard } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import {
     Tooltip,
     TooltipContent,
@@ -26,7 +25,6 @@ export default function BudgetForm({
     onNext: (data: Partial<TaskFormData>) => void;
 }) {
     const [budget, setBudget] = useState(data.budget || '');
-    const [budgetType, setBudgetType] = useState<'fixed' | 'hourly'>('fixed');
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -34,9 +32,7 @@ export default function BudgetForm({
             return; // Add form validation as needed
         }
 
-        onNext({
-            budget
-        });
+        onNext({ budget });
     };
 
     const itemVariants = {
@@ -46,9 +42,9 @@ export default function BudgetForm({
             y: 0,
             transition: {
                 delay: i * 0.1,
-                duration: 0.3
-            }
-        })
+                duration: 0.3,
+            },
+        }),
     };
 
     return (
@@ -59,39 +55,8 @@ export default function BudgetForm({
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3 }}
             >
-                What's your budget?
+                What is your budget?
             </motion.h2>
-
-            {/* Budget Type Selection */}
-            <motion.div
-                initial="hidden"
-                animate="visible"
-                custom={0}
-                variants={itemVariants}
-            >
-                <Label className="text-sm font-medium text-slate-700 mb-3 block">
-                    Budget type
-                </Label>
-                <RadioGroup
-                    value={budgetType}
-                    onValueChange={(value) => setBudgetType(value as 'fixed' | 'hourly')}
-                    className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4"
-                >
-                    <div className="flex items-center space-x-3 bg-white border border-slate-200 rounded-lg p-3 hover:bg-slate-50 cursor-pointer">
-                        <RadioGroupItem value="fixed" id="fixed" className="text-emerald-600" />
-                        <Label htmlFor="fixed" className="font-medium cursor-pointer">
-                            Total price
-                        </Label>
-                    </div>
-
-                    <div className="flex items-center space-x-3 bg-white border border-slate-200 rounded-lg p-3 hover:bg-slate-50 cursor-pointer">
-                        <RadioGroupItem value="hourly" id="hourly" className="text-emerald-600" />
-                        <Label htmlFor="hourly" className="font-medium cursor-pointer">
-                            Hourly rate
-                        </Label>
-                    </div>
-                </RadioGroup>
-            </motion.div>
 
             {/* Budget Amount */}
             <motion.div
@@ -103,40 +68,55 @@ export default function BudgetForm({
             >
                 <div className="flex items-center justify-between">
                     <Label htmlFor="budget" className="text-sm font-medium text-slate-700">
-                        {budgetType === 'fixed' ? 'Budget amount' : 'Hourly rate'} (KES)
+                        Budget amount (KES)
                     </Label>
                     <TooltipProvider>
                         <Tooltip>
                             <TooltipTrigger asChild>
-                                <button type="button" className="text-slate-400 hover:text-slate-600">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
+                                <button
+                                    type="button"
+                                    className="text-slate-400 hover:text-slate-600"
+                                >
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        width="16"
+                                        height="16"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="2"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                    >
+                                        <circle cx="12" cy="12" r="10" />
+                                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                                        <path d="M12 17h.01" />
+                                    </svg>
                                 </button>
                             </TooltipTrigger>
                             <TooltipContent>
                                 <p className="max-w-[200px] text-xs">
-                                    {budgetType === 'fixed'
-                                        ? 'Enter the total amount you\'re willing to pay for this task'
-                                        : 'Enter how much you\'re willing to pay per hour'}
+                                    Enter the total amount you are willing to pay for this task.
                                 </p>
                             </TooltipContent>
                         </Tooltip>
                     </TooltipProvider>
                 </div>
+
                 <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <DollarSign className="h-5 w-5 text-slate-400" />
+                        <h2>KES</h2>
                     </div>
                     <Input
                         type="number"
                         id="budget"
                         min={0}
-                        placeholder={budgetType === 'fixed' ? '150' : '30'}
+                        placeholder="150"
                         value={budget}
                         onChange={(e) => setBudget(e.target.value)}
                         className="pl-10 h-12 border-slate-300 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200"
                     />
                 </div>
-                }
             </motion.div>
 
             {/* Budget Tips */}

@@ -36,7 +36,7 @@ export default function CreateTaskPage() {
         date: '2025-06-01',
         dateMode: 'on',
         timeSlot: 'morning',
-        location: 'Perth WA, Australia',
+        location: 'Westlands, Nairobi',
         locationType: 'in-person',
         description: 'The kitchen tap is leaking and needs fixing.',
         images: [],

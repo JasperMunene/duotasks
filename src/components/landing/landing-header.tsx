@@ -61,13 +61,13 @@ export default function LandingHeader() {
                 <div className="flex items-center space-x-4">
                     {/* Only show icons on md+ */}
                     <div className="hidden md:flex items-center space-x-4">
-                        <Button variant="ghost" size="icon" className="text-gray-600 hover:bg-emerald-600">
+                        <Button variant="ghost" size="icon" className="text-gray-600 hover:text-white hover:bg-emerald-600">
                             <HelpCircleIcon className="h-5 w-5" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="text-gray-600 hover:bg-emerald-600">
+                        <Button variant="ghost" size="icon" className="text-gray-600 hover:text-white hover:bg-emerald-600">
                             <BellIcon className="h-5 w-5" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="text-gray-600 hover:bg-emerald-600">
+                        <Button variant="ghost" size="icon" className="text-gray-600 hover:text-white hover:bg-emerald-600">
                             <MessageSquareIcon className="h-5 w-5" />
                         </Button>
                         <Button variant="ghost" size="icon" className="p-0">
