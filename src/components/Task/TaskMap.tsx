@@ -23,6 +23,34 @@ export default function TaskMap() {
         // Optional controls
         mapInstance.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
 
+        // Once the map loads, add custom markers
+        mapInstance.current.on('load', () => {
+            // Example marker data
+            const markers = [
+                { coords: [36.8219, -1.2921], title: 'Marker 1' },
+                { coords: [36.8319, -1.3000], title: 'Marker 2' },
+            ];
+
+            markers.forEach(({ coords, title }) => {
+                // Create a HTML element for each custom marker
+                const el = document.createElement('div');
+                el.className = 'custom-marker';
+                el.title = title;
+                el.style.width = '35px';
+                el.style.height = '45px';
+                el.style.backgroundImage = 'url(/map-pin.svg)';
+                el.style.backgroundSize = 'contain';
+                el.style.backgroundRepeat = 'no-repeat';
+                el.style.cursor = 'pointer';
+
+// Anchor to bottom
+                new mapboxgl.Marker(el, { anchor: 'bottom' })
+                    .setLngLat(coords as [number, number])
+                    .addTo(mapInstance.current!);
+
+            });
+        });
+
         // Clean up on unmount
         return () => {
             mapInstance.current?.remove();
