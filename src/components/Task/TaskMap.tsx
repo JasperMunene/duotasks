@@ -51,7 +51,7 @@ export default function TaskMap() {
             });
         });
 
-        // Clean up on unmount
+        // Clean up on unmounting
         return () => {
             mapInstance.current?.remove();
         };
