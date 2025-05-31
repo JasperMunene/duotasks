@@ -15,7 +15,7 @@ export default function TaskMap() {
         // Initialize map only once
         mapInstance.current = new mapboxgl.Map({
             container: mapContainer.current,
-            style: 'mapbox://styles/jaspermunene/cmbc6pmue002701sd692rdq2q',
+            style: 'mapbox://styles/mapbox/streets-v11',
             center: [36.8219, -1.2921],
             zoom: 10,
         });
