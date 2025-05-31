@@ -12,7 +12,7 @@ export default function TaskMap() {
         // Provide your Mapbox access token
         mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN || '';
 
-        // Initialize map only once
+        // Initialize a map only once
         mapInstance.current = new mapboxgl.Map({
             container: mapContainer.current,
             style: 'mapbox://styles/mapbox/streets-v11',
