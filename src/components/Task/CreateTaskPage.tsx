@@ -104,7 +104,7 @@ export default function CreateTaskPage() {
                                             step === item.id
                                                 ? "bg-emerald-600 text-white shadow-md shadow-emerald-200"
                                                 : step > item.id
-                                                    ? "bg-emerald-100 text-emerald-700"
+                                                    ? "bg-emerald-50 text-emerald-800"
                                                     : "bg-slate-100 text-slate-500"
                                         )}
                                         initial={{ scale: 0.9 }}

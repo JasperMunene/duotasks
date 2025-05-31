@@ -25,7 +25,7 @@ export default function ReviewForm({
                 <ReviewItem label="Date" value={data.date} />
                 <ReviewItem label="Location" value={data.location} />
                 <ReviewItem label="Description" value={data.description} />
-                <ReviewItem label="Budget" value={`AUD ${data.budget}`} />
+                <ReviewItem label="Budget" value={`KES ${data.budget}`} />
             </div>
 
             <div className="flex justify-between pt-6">
