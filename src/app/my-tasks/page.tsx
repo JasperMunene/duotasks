@@ -1,15 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { MapPin, Clock, ChevronDown, Filter, SortAsc } from 'lucide-react';
+import { MapPin, Clock, Filter, SortAsc } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import {
@@ -68,10 +62,6 @@ const mockTasks = {
 
 export default function MyTasks() {
     const [searchQuery, setSearchQuery] = useState('');
-    const [selectedCategory, setSelectedCategory] = useState('All Categories');
-    const [selectedLocation, setSelectedLocation] = useState('100km+ Perth WA & remotely');
-    const [selectedPrice, setSelectedPrice] = useState('Any price');
-
     const TaskList = ({ tasks }: { tasks: typeof mockTasks.posted }) => (
         <div className="space-y-4">
             {tasks.map((task) => (

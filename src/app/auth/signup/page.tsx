@@ -59,27 +59,32 @@ export default function SignupPage() {
                 }),
             });
 
+            const payload = await res.json().catch(() => ({}));
+
             if (res.status === 201) {
                 toast({
                     title: 'Account created!',
-                    description: 'Please check your email for the verification code.',
+                    description: payload.message || 'Please check your email for the verification code.',
                 });
-                router.push('/auth/verify-email');
+
+                // Redirect to /verify and optionally pass user ID and email via query string
+                router.push(`/verify?email=${encodeURIComponent(values.email)}&user_id=${payload.user_id}`);
                 return;
             }
 
-            // Safely parse JSON (or fallback to empty object)
-            const errorData = await res.json().catch(() => ({} as { message?: string }));
             const errorMessage =
                 res.status === 409
-                    ? errorData.message ?? 'Email already in use'
-                    : errorData.message ?? 'Registration failed';
+                    ? payload.message ?? 'Email already in use'
+                    : payload.message ?? 'Registration failed';
 
-            throw new Error(errorMessage);
+            toast({
+                variant: 'destructive',
+                title: 'Error',
+                description: errorMessage,
+            });
         } catch (unknownError: unknown) {
             console.error('Signup error:', unknownError);
 
-            // Narrow down unknownError to Error to safely access message
             const message =
                 unknownError instanceof Error
                     ? unknownError.message
@@ -94,6 +99,7 @@ export default function SignupPage() {
             setIsLoading(false);
         }
     };
+
 
     return (
         <AuthLayout

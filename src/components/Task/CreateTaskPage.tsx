@@ -19,7 +19,7 @@ export type StepType = 1 | 2 | 3 | 4 | 5;
 // Define task data structure
 export interface TaskFormData {
     title: string;
-    date: string | Date;
+    date: string;
     dateMode?: 'on' | 'before' | 'flexible';
     timeSlot?: 'morning' | 'midday' | 'afternoon' | 'evening';
     location: string;
@@ -67,7 +67,7 @@ export default function CreateTaskPage() {
         setStep(prev => (prev > 1 ? (prev - 1) as StepType : prev));
     };
 
-    // Determine which form to show based on current step
+    // Determine which form to show based on the current step
     const renderForm = () => {
         switch (step) {
             case 1:

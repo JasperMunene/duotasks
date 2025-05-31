@@ -21,7 +21,7 @@ const popularTasks = [
     "Handyman", "Gardening", "Painting",
 ];
 
-type DateMode = 'on' | 'before' | 'flexible' | null;
+type DateMode = 'on' | 'before' | 'flexible';
 type TimeSlot = 'morning' | 'midday' | 'afternoon' | 'evening';
 
 export default function TaskAndDateForm({
@@ -32,7 +32,7 @@ export default function TaskAndDateForm({
     onNext: (data: Partial<TaskFormData>) => void;
 }) {
     const [taskTitle, setTaskTitle] = useState(data.title || '');
-    const [dateMode, setDateMode] = useState<DateMode>(data.dateMode || null);
+    const [dateMode, setDateMode] = useState<DateMode | undefined>(data.dateMode);
     const [selectedDate, setSelectedDate] = useState<Date | undefined>(
         data.date ? new Date(data.date) : undefined
     );
@@ -60,13 +60,14 @@ export default function TaskAndDateForm({
             formattedDate = format(selectedDate, 'yyyy-MM-dd');
         }
 
-        // Prepare data for next step
+        // Prepare data for the next step
         onNext({
             title: taskTitle,
             date: formattedDate,
-            dateMode,
+            ...(dateMode !== undefined && { dateMode }),
             timeSlot: needTimeSlot ? timeSlot : undefined,
         });
+
     };
 
     const itemVariants = {

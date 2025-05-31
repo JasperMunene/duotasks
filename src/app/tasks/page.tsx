@@ -65,9 +65,6 @@ const mockTasks = [
 
 export default function BrowseTasks() {
     const [searchQuery, setSearchQuery] = useState('');
-    const [selectedCategory, setSelectedCategory] = useState('All Categories');
-    const [selectedLocation, setSelectedLocation] = useState('100km+ Karen, Nairobi & remotely');
-    const [selectedPrice, setSelectedPrice] = useState('Any price');
 
     return (
         <div className="min-h-screen bg-slate-50">
@@ -108,7 +105,7 @@ export default function BrowseTasks() {
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                     <Button variant="outline" className="h-10">
-                                        {selectedLocation}
+                                        100km+ Karen, Nairobi & remotely
                                         <ChevronDown className="ml-2 h-4 w-4" />
                                     </Button>
                                 </DropdownMenuTrigger>
@@ -123,7 +120,7 @@ export default function BrowseTasks() {
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                     <Button variant="outline" className="h-10">
-                                        {selectedPrice}
+                                        Any price
                                         <ChevronDown className="ml-2 h-4 w-4" />
                                     </Button>
                                 </DropdownMenuTrigger>
