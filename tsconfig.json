@@ -20,8 +20,19 @@
     ],
     "paths": {
       "@/*": ["./src/*"]
-    }
+    },
+
+    // ← Add this:
+    "typeRoots": [
+      "./src/types",          // your custom declarations
+      "./node_modules/@types" // default DefinitelyTyped modules
+    ]
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts"
+  ],
   "exclude": ["node_modules"]
 }

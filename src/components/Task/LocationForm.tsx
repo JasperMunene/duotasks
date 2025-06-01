@@ -1,36 +1,81 @@
-'use client';
-
-import { useState } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { MapPin, Smartphone, ArrowLeft, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
+import mbxGeocoding from '@mapbox/mapbox-sdk/services/geocoding';
 
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import type { TaskFormData } from './CreateTaskPage';
 
-export default function LocationForm({
-                                         data,
-                                         onBack,
-                                         onNext
-                                     }: {
+// Initialize Mapbox geocoding client
+const geocodingClient = mbxGeocoding({ accessToken: process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN! });
+export default function LocationForm({ data, onBack, onNext }: {
     data: TaskFormData;
     onBack: () => void;
     onNext: (data: Partial<TaskFormData>) => void;
 }) {
     const [locationType, setLocationType] = useState<'in-person' | 'online'>(data.locationType || 'in-person');
     const [location, setLocation] = useState(data.location || '');
+    const [suggestions, setSuggestions] = useState<string[]>([]);
+    const [showDropdown, setShowDropdown] = useState(false);
+    const dropdownRef = useRef<HTMLDivElement | null>(null);
+    const debounceRef = useRef<number | undefined>(undefined);
+
+    // Fetch suggestions when user types
+    const fetchSuggestions = useCallback((query: string) => {
+        geocodingClient.forwardGeocode({
+            query,
+            countries: ['ke'],
+            limit: 5,
+            autocomplete: true
+        })
+            .send()
+            .then(response => {
+                const features = response.body.features;
+                setSuggestions(features.map(f => f.place_name));
+                setShowDropdown(true);
+            })
+            .catch(() => {
+                setSuggestions([]);
+                setShowDropdown(false);
+            });
+    }, []);
+
+    // Handle input changes with debounce
+    const onInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const val = e.target.value;
+        setLocation(val);
+
+        window.clearTimeout(debounceRef.current);
+        if (val.trim().length > 2) {
+            debounceRef.current = window.setTimeout(() => fetchSuggestions(val), 300);
+        } else {
+            setSuggestions([]);
+            setShowDropdown(false);
+        }
+    };
+
+    // Close dropdown on outside click
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+                setShowDropdown(false);
+            }
+        };
+        document.addEventListener('click', handleClickOutside);
+        return () => document.removeEventListener('click', handleClickOutside);
+    }, []);
+
+    const handleSelect = (place: string) => {
+        setLocation(place);
+        setShowDropdown(false);
+    };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (locationType === 'in-person' && !location.trim()) {
-            return; // Add form validation as needed
-        }
-
-        onNext({
-            location: locationType === 'in-person' ? location : 'Online',
-            locationType
-        });
+        if (locationType === 'in-person' && !location.trim()) return;
+        onNext({ location: locationType === 'in-person' ? location : 'Online', locationType });
     };
 
     const itemVariants = {
@@ -38,15 +83,12 @@ export default function LocationForm({
         visible: (i: number) => ({
             opacity: 1,
             y: 0,
-            transition: {
-                delay: i * 0.1,
-                duration: 0.3
-            }
+            transition: { delay: i * 0.1, duration: 0.3 }
         })
     };
 
     return (
-        <form className="space-y-6" onSubmit={handleSubmit}>
+        <form className="space-y-6 relative" onSubmit={handleSubmit}>
             <motion.h2
                 className="text-xl font-semibold text-slate-800"
                 initial={{ opacity: 0, y: -10 }}
@@ -107,10 +149,10 @@ export default function LocationForm({
                 </Button>
             </motion.div>
 
-            {/* Location Input */}
+            {/* Location Input with Autocomplete (only for In-person) */}
             {locationType === 'in-person' && (
                 <motion.div
-                    className="space-y-3"
+                    className="space-y-3 relative"
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
                     exit={{ opacity: 0, height: 0 }}
@@ -126,9 +168,10 @@ export default function LocationForm({
                         <Input
                             type="text"
                             value={location}
-                            onChange={(e) => setLocation(e.target.value)}
+                            onChange={onInputChange}
                             className="pl-10 py-5 h-12 border-slate-300 focus:ring-emerald-500 focus:border-emerald-500"
-                            placeholder="Enter location (e.g. Sydney CBD)"
+                            placeholder="Enter location in Kenya"
+                            onFocus={() => location.trim().length > 2 && setShowDropdown(true)}
                         />
                         {location && (
                             <button
@@ -136,16 +179,30 @@ export default function LocationForm({
                                 className="absolute inset-y-0 right-0 pr-3 flex items-center"
                                 onClick={() => setLocation('')}
                             >
-                <span className="text-slate-400 hover:text-slate-500">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-                </span>
+                                <span className="text-slate-400 hover:text-slate-500">✕</span>
                             </button>
+                        )}
+                        {showDropdown && suggestions.length > 0 && (
+                            <div
+                                ref={dropdownRef}
+                                className="absolute z-10 mt-1 w-full bg-white border border-slate-200 rounded-md shadow-lg max-h-60 overflow-auto"
+                            >
+                                {suggestions.map((s, i) => (
+                                    <div
+                                        key={i}
+                                        onClick={() => handleSelect(s)}
+                                        className="px-4 py-2 hover:bg-emerald-50 cursor-pointer text-slate-700"
+                                    >
+                                        {s}
+                                    </div>
+                                ))}
+                            </div>
                         )}
                     </div>
                 </motion.div>
             )}
 
-            {/* Buttons */}
+            {/* Navigation Buttons */}
             <motion.div
                 className="flex justify-between pt-4 gap-4"
                 initial={{ opacity: 0 }}
