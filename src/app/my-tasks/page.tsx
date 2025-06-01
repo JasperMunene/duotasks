@@ -29,7 +29,7 @@ const mockTasks = {
         {
             id: 2,
             title: 'House Cleaning',
-            location: 'Fremantle WA, Australia',
+            location: 'Westlands, Kenya',
             budget: 200,
             date: 'Before Sun, 1 Jun',
             offers: 5,
@@ -51,7 +51,7 @@ const mockTasks = {
         {
             id: 4,
             title: 'Garden Maintenance',
-            location: 'Perth WA, Australia',
+            location: 'Westlands, Kenya',
             budget: 150,
             date: 'Completed on May 15',
             offers: 4,
