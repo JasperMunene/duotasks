@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import LandingHeader from "@/components/landing/landing-header";
+import Image from 'next/image';
 
 const mockMessages = [
     {
@@ -99,8 +100,10 @@ function MessageCard({ message }: { message: typeof mockMessages[0] }) {
             }`}>
                 <div className="flex items-start gap-4">
                     <div className="relative">
-                        <img
+                        <Image
                             src={message.user.avatar}
+                            width={128}
+                            height={128}
                             alt={message.user.name}
                             className="w-12 h-12 rounded-full object-cover"
                         />

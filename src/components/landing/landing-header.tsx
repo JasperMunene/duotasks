@@ -8,10 +8,6 @@ import {
     HelpCircleIcon,
     BellIcon,
     MessageSquareIcon,
-    ChevronRight,
-    Settings,
-    CreditCard,
-    LogOut,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Send, Image, Paperclip,  MoreVertical } from 'lucide-react';
+import { ArrowLeft, Send, Image as ImageIcon, Paperclip,  MoreVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -12,6 +12,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import Image from 'next/image';
 
 const mockChat = {
     user: {
@@ -67,8 +68,10 @@ export default function ChatPage() {
                             </Link>
                             <div className="flex items-center gap-3">
                                 <div className="relative">
-                                    <img
+                                    <Image
                                         src={mockChat.user.avatar}
+                                        width={128}
+                                        height={128}
                                         alt={mockChat.user.name}
                                         className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm"
                                     />
@@ -152,8 +155,10 @@ export default function ChatPage() {
                             <div className={`max-w-[70%] space-y-2 ${message.sender === 'me' ? 'order-2' : 'order-1'}`}>
                                 {message.sender === 'them' && (
                                     <div className="flex items-center gap-2">
-                                        <img
+                                        <Image
                                             src={mockChat.user.avatar}
+                                            width={64}
+                                            height={64}
                                             alt={mockChat.user.name}
                                             className="w-8 h-8 rounded-full object-cover"
                                         />
@@ -190,7 +195,7 @@ export default function ChatPage() {
                             size="icon"
                             className="hover:bg-emerald-50 hover:text-emerald-600 border-slate-200"
                         >
-                            <Image className="h-5 w-5" />
+                            <ImageIcon className="h-5 w-5" />
                         </Button>
                         <Button
                             variant="outline"
