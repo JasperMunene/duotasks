@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { MapPin, Smartphone, ArrowLeft, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -10,6 +12,7 @@ import type { TaskFormData } from './CreateTaskPage';
 
 // Initialize Mapbox geocoding client
 const geocodingClient = mbxGeocoding({ accessToken: process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN! });
+
 export default function LocationForm({ data, onBack, onNext }: {
     data: TaskFormData;
     onBack: () => void;
@@ -21,19 +24,19 @@ export default function LocationForm({ data, onBack, onNext }: {
     const [showDropdown, setShowDropdown] = useState(false);
     const dropdownRef = useRef<HTMLDivElement | null>(null);
     const debounceRef = useRef<number | undefined>(undefined);
+    const [errors, setErrors] = useState<{ location?: string }>({});
+
+    // Available modes typed as literal union
+    const modes = ['in-person', 'online'] as const;
 
     // Fetch suggestions when user types
     const fetchSuggestions = useCallback((query: string) => {
-        geocodingClient.forwardGeocode({
-            query,
-            countries: ['ke'],
-            limit: 5,
-            autocomplete: true
-        })
+        geocodingClient
+            .forwardGeocode({ query, countries: ['ke'], limit: 5, autocomplete: true })
             .send()
-            .then(response => {
+            .then((response) => {
                 const features = response.body.features;
-                setSuggestions(features.map(f => f.place_name));
+                setSuggestions(features.map((f) => f.place_name));
                 setShowDropdown(true);
             })
             .catch(() => {
@@ -46,7 +49,7 @@ export default function LocationForm({ data, onBack, onNext }: {
     const onInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const val = e.target.value;
         setLocation(val);
-
+        setErrors({});
         window.clearTimeout(debounceRef.current);
         if (val.trim().length > 2) {
             debounceRef.current = window.setTimeout(() => fetchSuggestions(val), 300);
@@ -70,11 +73,17 @@ export default function LocationForm({ data, onBack, onNext }: {
     const handleSelect = (place: string) => {
         setLocation(place);
         setShowDropdown(false);
+        setErrors({});
     };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (locationType === 'in-person' && !location.trim()) return;
+        const newErrors: typeof errors = {};
+        if (locationType === 'in-person' && !location.trim()) {
+            newErrors.location = 'Please enter a location.';
+        }
+        setErrors(newErrors);
+        if (Object.keys(newErrors).length) return;
         onNext({ location: locationType === 'in-person' ? location : 'Online', locationType });
     };
 
@@ -83,12 +92,12 @@ export default function LocationForm({ data, onBack, onNext }: {
         visible: (i: number) => ({
             opacity: 1,
             y: 0,
-            transition: { delay: i * 0.1, duration: 0.3 }
-        })
+            transition: { delay: i * 0.1, duration: 0.3 },
+        }),
     };
 
     return (
-        <form className="space-y-6 relative" onSubmit={handleSubmit}>
+        <form className="space-y-6 relative" onSubmit={handleSubmit} noValidate>
             <motion.h2
                 className="text-xl font-semibold text-slate-800"
                 initial={{ opacity: 0, y: -10 }}
@@ -106,47 +115,47 @@ export default function LocationForm({ data, onBack, onNext }: {
                 custom={1}
                 variants={itemVariants}
             >
-                <Button
-                    type="button"
-                    onClick={() => setLocationType('in-person')}
-                    variant="outline"
-                    className={cn(
-                        "h-auto flex flex-col items-center py-6 px-4 space-y-3 transition-all duration-200",
-                        locationType === 'in-person'
-                            ? "bg-emerald-50 border-emerald-200 ring-1 ring-emerald-200 text-emerald-700"
-                            : "bg-white hover:bg-emerald-50 text-slate-600"
-                    )}
-                >
-                    <MapPin className={cn(
-                        "h-10 w-10 p-2 rounded-full transition-colors",
-                        locationType === 'in-person' ? "bg-emerald-100 text-emerald-600" : "bg-emerald-50 text-slate-500"
-                    )} />
-                    <span className="font-medium text-base">In-person</span>
-                    <span className="text-xs text-center max-w-[200px]">
-            Select this if you need the Tasker physically there
-          </span>
-                </Button>
-
-                <Button
-                    type="button"
-                    onClick={() => setLocationType('online')}
-                    variant="outline"
-                    className={cn(
-                        "h-auto flex flex-col items-center py-6 px-4 space-y-3 transition-all duration-200",
-                        locationType === 'online'
-                            ? "bg-emerald-50 border-emerald-200 ring-1 ring-emerald-200 text-emerald-700"
-                            : "bg-white hover:bg-emerald-50 text-slate-600"
-                    )}
-                >
-                    <Smartphone className={cn(
-                        "h-10 w-10 p-2 rounded-full transition-colors",
-                        locationType === 'online' ? "bg-emerald-100 text-emerald-600" : "bg-emerald-50 text-slate-500"
-                    )} />
-                    <span className="font-medium text-base">Online</span>
-                    <span className="text-xs text-center max-w-[200px]">
-            Select this if the Tasker can do it from home
-          </span>
-                </Button>
+                {modes.map((mode) => {
+                    const isInPerson = mode === 'in-person';
+                    return (
+                        <Button
+                            key={mode}
+                            type="button"
+                            onClick={() => setLocationType(mode)}
+                            variant="outline"
+                            className={cn(
+                                'max-w-full h-auto flex flex-col items-center py-6 px-4 transition-all duration-200',
+                                locationType === mode
+                                    ? 'bg-emerald-50 border-emerald-200 ring-1 ring-emerald-200 text-emerald-700'
+                                    : 'bg-white hover:bg-emerald-50 text-slate-600'
+                            )}
+                        >
+                            {isInPerson ? (
+                                <MapPin
+                                    className={cn(
+                                        'h-10 w-10 p-2 rounded-full transition-colors',
+                                        locationType === mode ? 'bg-emerald-100 text-emerald-600' : 'bg-emerald-50 text-slate-500'
+                                    )}
+                                />
+                            ) : (
+                                <Smartphone
+                                    className={cn(
+                                        'h-10 w-10 p-2 rounded-full transition-colors',
+                                        locationType === mode ? 'bg-emerald-100 text-emerald-600' : 'bg-emerald-50 text-slate-500'
+                                    )}
+                                />
+                            )}
+                            <span className="font-medium text-base mt-2">
+                {isInPerson ? 'In-person' : 'Online'}
+              </span>
+                            <span className="text-xs text-center max-w-[180px] whitespace-normal break-words">
+                {isInPerson
+                    ? 'Select this if you need the Tasker physically there'
+                    : 'Select this if the Tasker can do it from home'}
+              </span>
+                        </Button>
+                    );
+                })}
             </motion.div>
 
             {/* Location Input with Autocomplete (only for In-person) */}
@@ -198,6 +207,7 @@ export default function LocationForm({ data, onBack, onNext }: {
                                 ))}
                             </div>
                         )}
+                        {errors.location && <p className="text-sm text-red-500 mt-1">{errors.location}</p>}
                     </div>
                 </motion.div>
             )}

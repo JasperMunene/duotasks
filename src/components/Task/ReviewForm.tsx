@@ -1,5 +1,9 @@
 'use client';
 
+import {Button} from "@/components/ui/button";
+import {ArrowLeft, ArrowRight} from "lucide-react";
+import React from "react";
+
 export default function ReviewForm({
                                        data,
                                        onBack,
@@ -29,18 +33,23 @@ export default function ReviewForm({
             </div>
 
             <div className="flex justify-between pt-6">
-                <button
+                <Button
+                    type="button"
                     onClick={onBack}
-                    className="bg-emerald-50 text-emerald-900 py-3 px-6 rounded-full font-semibold"
+                    variant="outline"
+                    className="px-6 group transition-all duration-200 border-slate-200 text-slate-600 hover:text-emerald-600 hover:border-emerald-200 hover:bg-emerald-50"
                 >
+                    <ArrowLeft className="w-4 h-4 mr-2 transition-transform duration-200 group-hover:-translate-x-1" />
                     Back
-                </button>
-                <button
+                </Button>
+                <Button
+                    type="submit"
                     onClick={onPublish}
-                    className="bg-emerald-500 text-white py-3 px-6 rounded-full font-semibold"
+                    className="px-6 bg-emerald-600 hover:bg-emerald-700 text-white group transition-all duration-200 shadow-sm hover:shadow"
                 >
-                    Publish Task
-                </button>
+                    Next
+                    <ArrowRight className="w-4 h-4 ml-2 transition-transform duration-200 group-hover:translate-x-1" />
+                </Button>
             </div>
         </div>
     );

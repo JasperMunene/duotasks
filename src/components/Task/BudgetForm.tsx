@@ -25,12 +25,20 @@ export default function BudgetForm({
     onNext: (data: Partial<TaskFormData>) => void;
 }) {
     const [budget, setBudget] = useState(data.budget || '');
+    const [errors, setErrors] = useState<{ budget?: string }>({});
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (budget.trim() === '' || isNaN(Number(budget))) {
-            return; // Add form validation as needed
+        const newErrors: typeof errors = {};
+
+        if (budget.trim() === '') {
+            newErrors.budget = 'Budget is required.';
+        } else if (isNaN(Number(budget)) || Number(budget) < 0) {
+            newErrors.budget = 'Please enter a valid non-negative number.';
         }
+
+        setErrors(newErrors);
+        if (Object.keys(newErrors).length) return;
 
         onNext({ budget });
     };
@@ -40,15 +48,12 @@ export default function BudgetForm({
         visible: (i: number) => ({
             opacity: 1,
             y: 0,
-            transition: {
-                delay: i * 0.1,
-                duration: 0.3,
-            },
+            transition: { delay: i * 0.1, duration: 0.3 },
         }),
     };
 
     return (
-        <form className="space-y-6" onSubmit={handleSubmit}>
+        <form className="space-y-6" onSubmit={handleSubmit} noValidate>
             <motion.h2
                 className="text-xl font-semibold text-slate-800"
                 initial={{ opacity: 0, y: -10 }}
@@ -77,21 +82,7 @@ export default function BudgetForm({
                                     type="button"
                                     className="text-slate-400 hover:text-slate-600"
                                 >
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        width="16"
-                                        height="16"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        strokeWidth="2"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                    >
-                                        <circle cx="12" cy="12" r="10" />
-                                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
-                                        <path d="M12 17h.01" />
-                                    </svg>
+                                    <CreditCard className="h-5 w-5" />
                                 </button>
                             </TooltipTrigger>
                             <TooltipContent>
@@ -105,23 +96,30 @@ export default function BudgetForm({
 
                 <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <h2>KES</h2>
+                        <span className="text-slate-500">KES</span>
                     </div>
                     <Input
-                        type="number"
+                        type="text"
                         id="budget"
-                        min={0}
                         placeholder="150"
                         value={budget}
-                        onChange={(e) => setBudget(e.target.value)}
+                        onChange={(e) => {
+                            setBudget(e.target.value);
+                            setErrors({});
+                        }}
                         className="pl-10 h-12 border-slate-300 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200"
                     />
+                    {errors.budget && (
+                        <p className="text-sm text-red-500 mt-1 pb-2 absolute left-0">
+                            {errors.budget}
+                        </p>
+                    )}
                 </div>
             </motion.div>
 
             {/* Budget Tips */}
             <motion.div
-                className="bg-emerald-50 border border-emerald-100 rounded-lg p-4 text-sm"
+                className="bg-emerald-50 border mt-3 border-emerald-100 rounded-lg p-4 text-sm"
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.3, duration: 0.3 }}
@@ -141,9 +139,10 @@ export default function BudgetForm({
             {/* Navigation Buttons */}
             <motion.div
                 className="flex justify-between pt-4 gap-4"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.4, duration: 0.3 }}
+                initial="hidden"
+                animate="visible"
+                custom={2}
+                variants={itemVariants}
             >
                 <Button
                     type="button"
