@@ -26,6 +26,7 @@ export interface TaskFormData {
     locationType: 'in-person' | 'online';
     description: string;
     images?: File[];
+    imageUrls?: string[];
     budget: string;
     latitude?: number;
     longitude?: number;

@@ -81,6 +81,7 @@ export default function DetailsForm({ data, onBack, onNext }: {
                         )
                     );
                 } catch (error) {
+                    console.error('Error uploading image:', error);
                     setImages(prev =>
                         prev.map(img =>
                             img.id === image.id ? { ...img, status: 'failed' } : img
