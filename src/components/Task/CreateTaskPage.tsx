@@ -27,6 +27,8 @@ export interface TaskFormData {
     description: string;
     images?: File[];
     budget: string;
+    latitude?: number;
+    longitude?: number;
 }
 
 export default function CreateTaskPage() {
@@ -36,7 +38,7 @@ export default function CreateTaskPage() {
         date: '2025-06-01',
         dateMode: 'on',
         timeSlot: 'morning',
-        location: 'Westlands, Nairobi',
+        location: '',
         locationType: 'in-person',
         description: 'The kitchen tap is leaking and needs fixing.',
         images: [],

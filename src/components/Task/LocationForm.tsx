@@ -13,6 +13,8 @@ import type { TaskFormData } from './CreateTaskPage';
 // Initialize Mapbox geocoding client
 const geocodingClient = mbxGeocoding({ accessToken: process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN! });
 
+type Suggestion = { place_name: string; center: [number, number] };
+
 export default function LocationForm({ data, onBack, onNext }: {
     data: TaskFormData;
     onBack: () => void;
@@ -20,23 +22,29 @@ export default function LocationForm({ data, onBack, onNext }: {
 }) {
     const [locationType, setLocationType] = useState<'in-person' | 'online'>(data.locationType || 'in-person');
     const [location, setLocation] = useState(data.location || '');
-    const [suggestions, setSuggestions] = useState<string[]>([]);
+    const [coords, setCoords] = useState<{ latitude: number; longitude: number } | null>(
+        data.latitude && data.longitude
+            ? { latitude: data.latitude, longitude: data.longitude }
+            : null
+    );
+    const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
     const [showDropdown, setShowDropdown] = useState(false);
     const dropdownRef = useRef<HTMLDivElement | null>(null);
     const debounceRef = useRef<number | undefined>(undefined);
     const [errors, setErrors] = useState<{ location?: string }>({});
 
-    // Available modes typed as literal union
     const modes = ['in-person', 'online'] as const;
 
-    // Fetch suggestions when user types
     const fetchSuggestions = useCallback((query: string) => {
         geocodingClient
             .forwardGeocode({ query, countries: ['ke'], limit: 5, autocomplete: true })
             .send()
             .then((response) => {
-                const features = response.body.features;
-                setSuggestions(features.map((f) => f.place_name));
+                const mapped: Suggestion[] = response.body.features.map((f) => ({
+                    place_name: f.place_name,
+                    center: f.center as [number, number],
+                }));
+                setSuggestions(mapped);
                 setShowDropdown(true);
             })
             .catch(() => {
@@ -45,10 +53,10 @@ export default function LocationForm({ data, onBack, onNext }: {
             });
     }, []);
 
-    // Handle input changes with debounce
     const onInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const val = e.target.value;
         setLocation(val);
+        setCoords(null);
         setErrors({});
         window.clearTimeout(debounceRef.current);
         if (val.trim().length > 2) {
@@ -59,7 +67,6 @@ export default function LocationForm({ data, onBack, onNext }: {
         }
     };
 
-    // Close dropdown on outside click
     useEffect(() => {
         const handleClickOutside = (e: MouseEvent) => {
             if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
@@ -70,8 +77,9 @@ export default function LocationForm({ data, onBack, onNext }: {
         return () => document.removeEventListener('click', handleClickOutside);
     }, []);
 
-    const handleSelect = (place: string) => {
-        setLocation(place);
+    const handleSelect = (s: Suggestion) => {
+        setLocation(s.place_name);
+        setCoords({ latitude: s.center[1], longitude: s.center[0] });
         setShowDropdown(false);
         setErrors({});
     };
@@ -79,12 +87,21 @@ export default function LocationForm({ data, onBack, onNext }: {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         const newErrors: typeof errors = {};
-        if (locationType === 'in-person' && !location.trim()) {
-            newErrors.location = 'Please enter a location.';
+        if (locationType === 'in-person') {
+            if (!location.trim()) {
+                newErrors.location = 'Please enter a location.';
+            } else if (!coords) {
+                newErrors.location = 'Please select a location suggestion.';
+            }
         }
         setErrors(newErrors);
         if (Object.keys(newErrors).length) return;
-        onNext({ location: locationType === 'in-person' ? location : 'Online', locationType });
+        onNext({
+            location: locationType === 'in-person' ? location : 'Online',
+            locationType,
+            latitude: coords?.latitude,
+            longitude: coords?.longitude,
+        });
     };
 
     const itemVariants = {
@@ -107,7 +124,6 @@ export default function LocationForm({ data, onBack, onNext }: {
                 Where will this task take place?
             </motion.h2>
 
-            {/* Toggle Buttons */}
             <motion.div
                 className="grid grid-cols-1 md:grid-cols-2 gap-4"
                 initial="hidden"
@@ -134,31 +150,34 @@ export default function LocationForm({ data, onBack, onNext }: {
                                 <MapPin
                                     className={cn(
                                         'h-10 w-10 p-2 rounded-full transition-colors',
-                                        locationType === mode ? 'bg-emerald-100 text-emerald-600' : 'bg-emerald-50 text-slate-500'
+                                        locationType === mode
+                                            ? 'bg-emerald-100 text-emerald-600'
+                                            : 'bg-emerald-50 text-slate-500'
                                     )}
                                 />
                             ) : (
                                 <Smartphone
                                     className={cn(
                                         'h-10 w-10 p-2 rounded-full transition-colors',
-                                        locationType === mode ? 'bg-emerald-100 text-emerald-600' : 'bg-emerald-50 text-slate-500'
+                                        locationType === mode
+                                            ? 'bg-emerald-100 text-emerald-600'
+                                            : 'bg-emerald-50 text-slate-500'
                                     )}
                                 />
                             )}
                             <span className="font-medium text-base mt-2">
-                {isInPerson ? 'In-person' : 'Online'}
-              </span>
+                                {isInPerson ? 'In-person' : 'Online'}
+                            </span>
                             <span className="text-xs text-center max-w-[180px] whitespace-normal break-words">
-                {isInPerson
-                    ? 'Select this if you need the Tasker physically there'
-                    : 'Select this if the Tasker can do it from home'}
-              </span>
+                                {isInPerson
+                                    ? 'Select this if you need the Tasker physically there'
+                                    : 'Select this if the Tasker can do it from home'}
+                            </span>
                         </Button>
                     );
                 })}
             </motion.div>
 
-            {/* Location Input with Autocomplete (only for In-person) */}
             {locationType === 'in-person' && (
                 <motion.div
                     className="space-y-3 relative"
@@ -186,7 +205,7 @@ export default function LocationForm({ data, onBack, onNext }: {
                             <button
                                 type="button"
                                 className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                                onClick={() => setLocation('')}
+                                onClick={() => { setLocation(''); setCoords(null); }}
                             >
                                 <span className="text-slate-400 hover:text-slate-500">✕</span>
                             </button>
@@ -202,7 +221,7 @@ export default function LocationForm({ data, onBack, onNext }: {
                                         onClick={() => handleSelect(s)}
                                         className="px-4 py-2 hover:bg-emerald-50 cursor-pointer text-slate-700"
                                     >
-                                        {s}
+                                        {s.place_name}
                                     </div>
                                 ))}
                             </div>
@@ -212,7 +231,6 @@ export default function LocationForm({ data, onBack, onNext }: {
                 </motion.div>
             )}
 
-            {/* Navigation Buttons */}
             <motion.div
                 className="flex justify-between pt-4 gap-4"
                 initial={{ opacity: 0 }}
