@@ -30,6 +30,7 @@ export interface TaskFormData {
     budget: string;
     latitude?: number;
     longitude?: number;
+
 }
 
 export default function CreateTaskPage() {

@@ -15,6 +15,9 @@ export default function ReviewForm({
         location: string;
         description: string;
         budget: string;
+        latitude: string;
+        longitude: string;
+        imageUrls: string[];
     };
     onBack: () => void;
     onPublish: () => void;

@@ -3,17 +3,20 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { MapPin, Smartphone, ArrowLeft, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
-import mbxGeocoding from '@mapbox/mapbox-sdk/services/geocoding';
 
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import type { TaskFormData } from './CreateTaskPage';
 
-// Initialize Mapbox geocoding client
-const geocodingClient = mbxGeocoding({ accessToken: process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN! });
+// Google Maps types
+declare global {
+    interface Window {
+        google: any;
+    }
+}
 
-type Suggestion = { place_name: string; center: [number, number] };
+type Suggestion = { description: string; place_id: string };
 
 export default function LocationForm({ data, onBack, onNext }: {
     data: TaskFormData;
@@ -32,26 +35,62 @@ export default function LocationForm({ data, onBack, onNext }: {
     const dropdownRef = useRef<HTMLDivElement | null>(null);
     const debounceRef = useRef<number | undefined>(undefined);
     const [errors, setErrors] = useState<{ location?: string }>({});
+    const autocompleteServiceRef = useRef<any>(null);
+    const geocoderRef = useRef<any>(null);
+    const [googleLoaded, setGoogleLoaded] = useState(false);
 
     const modes = ['in-person', 'online'] as const;
 
+    // Initialize Google services
+    useEffect(() => {
+        if (window.google && window.google.maps) {
+            autocompleteServiceRef.current = new window.google.maps.places.AutocompleteService();
+            geocoderRef.current = new window.google.maps.Geocoder();
+            setGoogleLoaded(true);
+            return;
+        }
+
+        if (!document.querySelector('#google-maps-script')) {
+            const script = document.createElement('script');
+            script.id = 'google-maps-script';
+            script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`;
+            script.async = true;
+            script.defer = true;
+            document.head.appendChild(script);
+
+            script.onload = () => {
+                autocompleteServiceRef.current = new window.google.maps.places.AutocompleteService();
+                geocoderRef.current = new window.google.maps.Geocoder();
+                setGoogleLoaded(true);
+            };
+        }
+    }, []);
+
     const fetchSuggestions = useCallback((query: string) => {
-        geocodingClient
-            .forwardGeocode({ query, countries: ['ke'], limit: 5, autocomplete: true })
-            .send()
-            .then((response) => {
-                const mapped: Suggestion[] = response.body.features.map((f) => ({
-                    place_name: f.place_name,
-                    center: f.center as [number, number],
+        if (!autocompleteServiceRef.current || !googleLoaded) return;
+
+        autocompleteServiceRef.current.getPlacePredictions(
+            {
+                input: query,
+                componentRestrictions: { country: 'ke' },
+                types: ['geocode', 'establishment']
+            },
+            (predictions: any[] | null, status: string) => {
+                if (status !== 'OK' || !predictions) {
+                    setSuggestions([]);
+                    setShowDropdown(false);
+                    return;
+                }
+
+                const mapped: Suggestion[] = predictions.map(p => ({
+                    description: p.description,
+                    place_id: p.place_id
                 }));
                 setSuggestions(mapped);
                 setShowDropdown(true);
-            })
-            .catch(() => {
-                setSuggestions([]);
-                setShowDropdown(false);
-            });
-    }, []);
+            }
+        );
+    }, [googleLoaded]);
 
     const onInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const val = e.target.value;
@@ -78,10 +117,20 @@ export default function LocationForm({ data, onBack, onNext }: {
     }, []);
 
     const handleSelect = (s: Suggestion) => {
-        setLocation(s.place_name);
-        setCoords({ latitude: s.center[1], longitude: s.center[0] });
-        setShowDropdown(false);
-        setErrors({});
+        if (!geocoderRef.current) return;
+
+        geocoderRef.current.geocode({ placeId: s.place_id }, (results: any[] | null, status: string) => {
+            if (status === 'OK' && results?.[0]) {
+                const location = results[0].geometry.location;
+                setLocation(s.description);
+                setCoords({
+                    latitude: location.lat(),
+                    longitude: location.lng()
+                });
+                setShowDropdown(false);
+                setErrors({});
+            }
+        });
     };
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -91,7 +140,7 @@ export default function LocationForm({ data, onBack, onNext }: {
             if (!location.trim()) {
                 newErrors.location = 'Please enter a location.';
             } else if (!coords) {
-                newErrors.location = 'Please select a location suggestion.';
+                newErrors.location = 'Please select a valid location from suggestions.';
             }
         }
         setErrors(newErrors);
@@ -205,7 +254,7 @@ export default function LocationForm({ data, onBack, onNext }: {
                             <button
                                 type="button"
                                 className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                                onClick={() => { setLocation(''); setCoords(null); }}
+                                onClick={() => { setLocation(''); setCoords(null); setSuggestions([]); }}
                             >
                                 <span className="text-slate-400 hover:text-slate-500">✕</span>
                             </button>
@@ -221,7 +270,7 @@ export default function LocationForm({ data, onBack, onNext }: {
                                         onClick={() => handleSelect(s)}
                                         className="px-4 py-2 hover:bg-emerald-50 cursor-pointer text-slate-700"
                                     >
-                                        {s.place_name}
+                                        {s.description}
                                     </div>
                                 ))}
                             </div>
