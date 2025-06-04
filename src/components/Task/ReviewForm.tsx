@@ -76,10 +76,12 @@ export default function ReviewForm({
                         throw new Error('Invalid date format');
                     }
 
+                    const iso = dateObj.toISOString().replace(/Z$/, '+00:00');
+
                     if (data.dateMode === 'on') {
-                        payload.specific_date = dateObj.toISOString();
+                        payload.specific_date = iso;
                     } else if (data.dateMode === 'before') {
-                        payload.deadline_date = dateObj.toISOString();
+                        payload.deadline_date = iso;
                     }
                 }
 
