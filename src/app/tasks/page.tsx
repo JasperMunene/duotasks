@@ -7,7 +7,6 @@ import { Input } from '@/components/ui/input';
 import {
     DropdownMenu,
     DropdownMenuContent,
-    DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import Image from 'next/image';
@@ -15,6 +14,8 @@ import { Card } from '@/components/ui/card';
 import TaskMap from '@/components/Task/TaskMap';
 import LandingHeader from "@/components/landing/landing-header";
 import CategoryFilter from "@/components/Filter/CategoryFilter";
+import LocationFilter from "@/components/Filter/LocationFilter";
+import PriceFilter from "@/components/Filter/PriceFilter";
 import {
     Popover,
     PopoverContent,
@@ -82,6 +83,30 @@ const mockTasks = [
 export default function BrowseTasks() {
     const [searchQuery, setSearchQuery] = useState('');
     const [isCategoryOpen, setIsCategoryOpen] = useState(false);
+    const [location, setLocation] = useState({
+        type: 'all' as const,
+        suburb: 'Karen, Nairobi',
+        distance: 100,
+    });
+
+    const [priceRange, setPriceRange] = useState<{ min: number; max: number | null }>({
+        min: 0,
+        max: null,
+    });
+
+
+    const getLocationText = () => {
+        if (location.type === 'remotely') return 'Remote only';
+        if (location.type === 'all') return `${location.distance}km+ ${location.suburb} & remotely`;
+        return `${location.distance}km+ ${location.suburb}`;
+    };
+
+
+    const getPriceText = () => {
+        if (priceRange.min === 0 && priceRange.max === null) return 'Any price';
+        if (priceRange.max === null) return `$${priceRange.min}+`;
+        return `$${priceRange.min} - $${priceRange.max}`;
+    };
 
 
     return (
@@ -123,36 +148,42 @@ export default function BrowseTasks() {
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                     <Button variant="outline" className="h-10">
-                                        100km+ Karen, Nairobi & remotely
+                                        {getLocationText()}
                                         <ChevronDown className="ml-2 h-4 w-4" />
                                     </Button>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent>
-                                    <DropdownMenuItem>Westlands, Nairobi</DropdownMenuItem>
-                                    <DropdownMenuItem>Kilimani, Nairobi</DropdownMenuItem>
-                                    <DropdownMenuItem>Lavington, Nairobi</DropdownMenuItem>
-                                    <DropdownMenuItem>Remote Only</DropdownMenuItem>
+                                <DropdownMenuContent side="bottom" align="start" className="p-0">
+                                    <LocationFilter
+                                        initialValues={location}
+                                        onCancel={() => {/* close menu */}}
+                                        onApply={(newLocation) => {
+                                            setLocation(newLocation);
+                                        }}
+                                    />
                                 </DropdownMenuContent>
                             </DropdownMenu>
 
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                     <Button variant="outline" className="h-10">
-                                        Any price
+                                        {getPriceText()}
                                         <ChevronDown className="ml-2 h-4 w-4" />
                                     </Button>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent>
-                                    <DropdownMenuItem>Under $100</DropdownMenuItem>
-                                    <DropdownMenuItem>$100 - $500</DropdownMenuItem>
-                                    <DropdownMenuItem>$500 - $1000</DropdownMenuItem>
-                                    <DropdownMenuItem>$1000+</DropdownMenuItem>
+                                <DropdownMenuContent side="bottom" align="start" className="p-0">
+                                    <PriceFilter
+                                        initialValues={priceRange}
+                                        onCancel={() => {/* close menu */}}
+                                        onApply={(newRange) => {
+                                            setPriceRange(newRange);
+                                        }}
+                                    />
                                 </DropdownMenuContent>
                             </DropdownMenu>
 
                             <Button variant="outline" className="h-10">
                                 <Filter className="h-4 w-4 mr-2" />
-                                Filters
+                                Other Filters
                             </Button>
 
                             <Button variant="outline" className="h-10">

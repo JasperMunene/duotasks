@@ -40,7 +40,7 @@ export default function TaskMap() {
 
         // Initialize the map
         mapInstance.current = new window.google.maps.Map(mapContainer.current, {
-            center: { lat: -1.2921, lng: 36.8219 },
+            center: { lat: 1.2921, lng: 36.8219 },
             zoom: 10,
             mapId: '923c89c476068ebefa09a522',
             disableDefaultUI: true,
