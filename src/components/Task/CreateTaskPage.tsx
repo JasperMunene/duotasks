@@ -12,6 +12,10 @@ import LocationForm from '@/components/Task/LocationForm';
 import DetailsForm from '@/components/Task/DetailsForm';
 import BudgetForm from '@/components/Task/BudgetForm';
 import ReviewForm from '@/components/Task/ReviewForm';
+import { useToast } from '@/hooks/use-toast';
+import {useRouter} from "next/navigation";
+
+
 
 // Define step types for better type safety
 export type StepType = 1 | 2 | 3 | 4 | 5;
@@ -34,19 +38,10 @@ export interface TaskFormData {
 }
 
 export default function CreateTaskPage() {
+    const router = useRouter();
+    const { toast } = useToast();
     const [step, setStep] = useState<StepType>(1);
-    const [formData, setFormData] = useState<TaskFormData>({
-        title: 'Fix my leaking tap',
-        date: '2025-06-01',
-        dateMode: 'on',
-        timeSlot: 'morning',
-        location: '',
-        locationType: 'in-person',
-        description: 'The kitchen tap is leaking and needs fixing.',
-        images: [],
-        budget: '120',
-    });
-
+    const [formData, setFormData] = useState<Partial<TaskFormData>>({});
     const updateFormData = (data: Partial<TaskFormData>) => {
         setFormData(prev => ({ ...prev, ...data }));
     };
@@ -75,15 +70,15 @@ export default function CreateTaskPage() {
     const renderForm = () => {
         switch (step) {
             case 1:
-                return <TaskAndDateForm data={formData} onNext={handleNext} />;
+                return <TaskAndDateForm data={formData as TaskFormData} onNext={handleNext} />;
             case 2:
-                return <LocationForm data={formData} onNext={handleNext} onBack={handleBack} />;
+                return <LocationForm data={formData as TaskFormData} onNext={handleNext} onBack={handleBack} />;
             case 3:
-                return <DetailsForm data={formData} onNext={handleNext} onBack={handleBack} />;
+                return <DetailsForm data={formData as TaskFormData} onNext={handleNext} onBack={handleBack} />;
             case 4:
-                return <BudgetForm data={formData} onNext={handleNext} onBack={handleBack} />;
+                return <BudgetForm data={formData as TaskFormData} onNext={handleNext} onBack={handleBack} />;
             case 5:
-                return <ReviewForm data={formData} onBack={handleBack} onPublish={() => alert('Task published!')} />;
+                return <ReviewForm data={formData as TaskFormData} onBack={handleBack} onPublish={() => {toast({ title: 'Success!', description: 'Your task has been published successfully.'}); router.push('/my-tasks');}} />;
             default:
                 return null;
         }

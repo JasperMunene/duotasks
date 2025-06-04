@@ -1,67 +1,105 @@
-import { useRef, useEffect } from 'react';
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
+import { useRef, useEffect, useState } from 'react';
+
+declare global {
+    interface Window {
+        google: any;
+    }
+}
 
 export default function TaskMap() {
     const mapContainer = useRef<HTMLDivElement>(null);
-    const mapInstance = useRef<mapboxgl.Map | null>(null);
+    const mapInstance = useRef<any>(null);
+    const [mapLoaded, setMapLoaded] = useState(false);
 
     useEffect(() => {
         if (!mapContainer.current) return;
 
-        // Provide your Mapbox access token
-        mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN || '';
+        // Check if Google Maps API is already loaded
+        if (window.google && window.google.maps) {
+            initMap();
+            return;
+        }
 
-        // Initialize a map only once
-        mapInstance.current = new mapboxgl.Map({
-            container: mapContainer.current,
-            style: 'mapbox://styles/mapbox/streets-v11',
-            center: [36.8219, -1.2921],
+        // Load Google Maps API if not already loaded
+        if (!document.querySelector('#google-maps-script')) {
+            const script = document.createElement('script');
+            script.id = 'google-maps-script';
+            script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&callback=initMap`;
+            script.async = true;
+            script.defer = true;
+            document.head.appendChild(script);
+
+            window.initMap = initMap;
+        }
+
+        return () => {
+            if (mapInstance.current) {
+                // Clean up map instance
+                mapInstance.current = null;
+            }
+        };
+    }, []);
+
+    const initMap = () => {
+        if (!mapContainer.current) return;
+
+        // Initialize the map
+        mapInstance.current = new window.google.maps.Map(mapContainer.current, {
+            center: { lat: -1.2921, lng: 36.8219 },
             zoom: 10,
+            mapId: '923c89c476068ebefa09a522',
+            disableDefaultUI: true,
+            styles: [
+                {
+                    featureType: "poi",
+                    stylers: [{ visibility: "off" }]
+                },
+                {
+                    featureType: "transit",
+                    elementType: "labels.icon",
+                    stylers: [{ visibility: "off" }]
+                }
+            ]
         });
 
-        // Optional controls
-        mapInstance.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+        // Add custom markers
+        const markers = [
+            { position: { lat: -1.2921, lng: 36.8219 }, title: 'Marker 1' },
+            { position: { lat: -1.3000, lng: 36.8319 }, title: 'Marker 2' },
+        ];
 
-        // Once the map loads, add custom markers
-        mapInstance.current.on('load', () => {
-            // Example marker data
-            const markers = [
-                { coords: [36.8219, -1.2921], title: 'Marker 1' },
-                { coords: [36.8319, -1.3000], title: 'Marker 2' },
-            ];
-
-            markers.forEach(({ coords, title }) => {
-                // Create a HTML element for each custom marker
-                const el = document.createElement('div');
-                el.className = 'custom-marker';
-                el.title = title;
-                el.style.width = '35px';
-                el.style.height = '45px';
-                el.style.backgroundImage = 'url(/map-pin.svg)';
-                el.style.backgroundSize = 'contain';
-                el.style.backgroundRepeat = 'no-repeat';
-                el.style.cursor = 'pointer';
-
-// Anchor to bottom
-                new mapboxgl.Marker(el, { anchor: 'bottom' })
-                    .setLngLat(coords as [number, number])
-                    .addTo(mapInstance.current!);
-
+        markers.forEach(({ position, title }) => {
+            new window.google.maps.Marker({
+                position,
+                map: mapInstance.current,
+                title,
+                icon: {
+                    url: '/map-pin.svg',
+                    scaledSize: new window.google.maps.Size(35, 45),
+                    anchor: new window.google.maps.Point(17, 45)
+                }
             });
         });
 
-        // Clean up on unmounting
-        return () => {
-            mapInstance.current?.remove();
-        };
-    }, []);
+        setMapLoaded(true);
+    };
 
     return (
         <div className="w-full h-full rounded-lg bg-slate-100 border border-slate-200">
             <div className="w-full h-full rounded-lg overflow-hidden">
                 {/* Map container */}
-                <div ref={mapContainer} className="w-full h-full" />
+                <div
+                    ref={mapContainer}
+                    className="w-full h-full"
+                    style={{ minHeight: '300px' }}
+                />
+
+                {/* Loading state */}
+                {!mapLoaded && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-slate-100">
+                        <p>Loading map...</p>
+                    </div>
+                )}
             </div>
         </div>
     );
