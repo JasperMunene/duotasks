@@ -5,6 +5,7 @@ const nextConfig: NextConfig = {
         domains: [
             'images.pexels.com',
             'res.cloudinary.com',
+            'images.unsplash.com',
         ],
     },
     async rewrites() {

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { MapPin, Clock, ChevronDown, Filter, SortAsc } from 'lucide-react';
+import { MapPin, Clock, Calendar, ChevronDown, Filter, SortAsc } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -10,10 +10,16 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Badge } from '@/components/ui/badge';
+import Image from 'next/image';
 import { Card } from '@/components/ui/card';
 import TaskMap from '@/components/Task/TaskMap';
 import LandingHeader from "@/components/landing/landing-header";
+import CategoryFilter from "@/components/Filter/CategoryFilter";
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "@/components/ui/popover";
 
 const mockTasks = [
     {
@@ -24,6 +30,8 @@ const mockTasks = [
         date: 'Flexible',
         offers: 3,
         status: 'Open',
+        avatarUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
+        timeSlot: 'Anytime',
     },
     {
         id: 2,
@@ -33,6 +41,8 @@ const mockTasks = [
         date: 'Before Sun, 1 Jun',
         offers: 5,
         status: 'Open',
+        avatarUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
+        timeSlot: 'Anytime',
     },
     {
         id: 3,
@@ -42,6 +52,8 @@ const mockTasks = [
         date: 'Flexible',
         offers: 8,
         status: 'Open',
+        avatarUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
+        timeSlot: 'Anytime',
     },
     {
         id: 4,
@@ -51,6 +63,8 @@ const mockTasks = [
         date: 'Before Sun, 1 Jun',
         offers: 5,
         status: 'Open',
+        avatarUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
+        timeSlot: 'Anytime',
     },
     {
         id: 5,
@@ -60,11 +74,15 @@ const mockTasks = [
         date: 'Before Sun, 1 Jun',
         offers: 5,
         status: 'Open',
+        avatarUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
+        timeSlot: 'Anytime',
     },
 ];
 
 export default function BrowseTasks() {
     const [searchQuery, setSearchQuery] = useState('');
+    const [isCategoryOpen, setIsCategoryOpen] = useState(false);
+
 
     return (
         <div className="min-h-screen bg-slate-50">
@@ -79,7 +97,7 @@ export default function BrowseTasks() {
                                 placeholder="Search for a task"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full pl-4 pr-10 h-10 rounded-lg border-slate-200 focus:ring-emerald-500 focus:border-emerald-500"
+                                className="w-full pl-4 pr-10 h-10 rounded-full bg-gray-50 border-slate-200 focus:ring-emerald-500 focus:border-emerald-500"
                             />
                             <button className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
@@ -87,20 +105,20 @@ export default function BrowseTasks() {
                         </div>
 
                         <div className="flex gap-2 flex-wrap sm:flex-nowrap">
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
+                            <Popover open={isCategoryOpen} onOpenChange={setIsCategoryOpen}>
+                                <PopoverTrigger asChild>
                                     <Button variant="outline" className="h-10">
-                                        Category
-                                        <ChevronDown className="ml-2 h-4 w-4" />
+                                        Category <ChevronDown className="ml-2 h-4 w-4" />
                                     </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent>
-                                    <DropdownMenuItem>Cleaning</DropdownMenuItem>
-                                    <DropdownMenuItem>Handyman</DropdownMenuItem>
-                                    <DropdownMenuItem>Moving</DropdownMenuItem>
-                                    <DropdownMenuItem>IT & Computer</DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
+                                </PopoverTrigger>
+                                <PopoverContent className="p-0 w-[400px]">
+                                    <CategoryFilter
+                                        initialSelected={[]}
+                                        onCancel={() => setIsCategoryOpen(false)}
+                                        onApply={() => setIsCategoryOpen(false)}
+                                    />
+                                </PopoverContent>
+                            </Popover>
 
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
@@ -151,33 +169,54 @@ export default function BrowseTasks() {
                     {/* Task List */}
                     <div className="space-y-4">
                         {mockTasks.map((task) => (
-                            <Card key={task.id} className="p-4 hover:shadow-md transition-shadow duration-200">
-                                <div className="flex justify-between items-start">
-                                    <div className="space-y-2">
-                                        <h3 className="text-lg font-semibold text-slate-900">{task.title}</h3>
-                                        <div className="flex items-center text-sm text-slate-500">
-                                            <MapPin className="h-4 w-4 mr-1" />
-                                            {task.location}
-                                        </div>
-                                        <div className="flex items-center text-sm text-slate-500">
-                                            <Clock className="h-4 w-4 mr-1" />
-                                            {task.date}
-                                        </div>
+                            <Card
+                                key={task.id}
+                                className="p-4 hover:shadow-md transition-shadow duration-200 flex flex-col justify-between"
+                            >
+                                {/* Top row: title + budget */}
+                                <div className="flex justify-between items-center">
+                                    <h3 className="text-base font-semibold text-slate-900">{task.title}</h3>
+                                    <span className="text-base font-bold text-emerald-600">KES {task.budget}</span>
+                                </div>
+
+                                {/* Middle rows: three lines of icon + text */}
+                                <div className="mt-3 space-y-2 text-sm text-slate-600">
+                                    {/* location */}
+                                    <div className="flex items-center">
+                                        <MapPin className="w-4 h-4 mr-1 text-slate-400" />
+                                        <span>{task.location}</span>
                                     </div>
-                                    <div className="text-right">
-                                        <div className="text-lg font-bold text-emerald-600">${task.budget}</div>
-                                        <Badge variant="secondary" className="mt-2">
-                                            {task.offers} offers
-                                        </Badge>
+
+                                    {/* date (uses Clock icon) */}
+                                    <div className="flex items-center">
+                                        <Calendar className="w-4 h-4 mr-1 text-slate-400" />
+                                        <span>{task.date}</span>
+                                    </div>
+
+                                    {/* time or “Anytime” */}
+                                    <div className="flex items-center">
+                                        {/* you can swap Clock for another icon if you like */}
+                                        <Clock className="w-4 h-4 mr-1 text-slate-400" />
+                                        <span>{task.timeSlot ?? 'Anytime'}</span>
                                     </div>
                                 </div>
-                                <div className="mt-4 pt-4 border-t border-slate-100">
-                                    <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">
-                                        {task.status}
-                                    </Badge>
+
+                                {/* Bottom row: status • offers + avatar */}
+                                <div className="mt-4 flex justify-between items-center text-sm">
+      <span className="font-medium text-emerald-600">
+        {task.status} • {task.offers} offer{task.offers > 1 ? 's' : ''}
+      </span>
+                                    <Image
+                                        src={task.avatarUrl}
+                                        width={36}
+                                        height={36}
+                                        alt=""
+                                        className="w-9 h-9 rounded-full object-cover"
+                                    />
                                 </div>
                             </Card>
                         ))}
+
                     </div>
 
                     {/* Map */}
