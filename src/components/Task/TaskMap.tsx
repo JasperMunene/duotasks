@@ -1,14 +1,9 @@
 import { useRef, useEffect, useState } from 'react';
 
-declare global {
-    interface Window {
-        google: any;
-    }
-}
 
 export default function TaskMap() {
     const mapContainer = useRef<HTMLDivElement>(null);
-    const mapInstance = useRef<any>(null);
+    const mapInstance = useRef<google.maps.Map | null>(null);
     const [mapLoaded, setMapLoaded] = useState(false);
 
     useEffect(() => {

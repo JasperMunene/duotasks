@@ -9,12 +9,6 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import type { TaskFormData } from './CreateTaskPage';
 
-// Google Maps types
-declare global {
-    interface Window {
-        google: any;
-    }
-}
 
 type Suggestion = { description: string; place_id: string };
 
@@ -35,8 +29,8 @@ export default function LocationForm({ data, onBack, onNext }: {
     const dropdownRef = useRef<HTMLDivElement | null>(null);
     const debounceRef = useRef<number | undefined>(undefined);
     const [errors, setErrors] = useState<{ location?: string }>({});
-    const autocompleteServiceRef = useRef<any>(null);
-    const geocoderRef = useRef<any>(null);
+    const autocompleteServiceRef = useRef<google.maps.places.AutocompleteService | null>(null);
+    const geocoderRef = useRef<google.maps.Geocoder | null>(null);
     const [googleLoaded, setGoogleLoaded] = useState(false);
 
     const modes = ['in-person', 'online'] as const;
@@ -75,7 +69,7 @@ export default function LocationForm({ data, onBack, onNext }: {
                 componentRestrictions: { country: 'ke' },
                 types: ['geocode', 'establishment']
             },
-            (predictions: any[] | null, status: string) => {
+            (predictions: google.maps.places.AutocompletePrediction[] | null, status: string) => {
                 if (status !== 'OK' || !predictions) {
                     setSuggestions([]);
                     setShowDropdown(false);
@@ -119,7 +113,7 @@ export default function LocationForm({ data, onBack, onNext }: {
     const handleSelect = (s: Suggestion) => {
         if (!geocoderRef.current) return;
 
-        geocoderRef.current.geocode({ placeId: s.place_id }, (results: any[] | null, status: string) => {
+        geocoderRef.current.geocode({ placeId: s.place_id }, (results: google.maps.GeocoderResult[] | null, status: string) => {
             if (status === 'OK' && results?.[0]) {
                 const location = results[0].geometry.location;
                 setLocation(s.description);

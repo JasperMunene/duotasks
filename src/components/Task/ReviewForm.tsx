@@ -3,13 +3,8 @@
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import React, { useState } from "react";
+import { TaskPayload } from "@/types/task";
 
-// Google Maps types
-declare global {
-    interface Window {
-        google: any;
-    }
-}
 
 export default function ReviewForm({
                                        data,
@@ -54,7 +49,7 @@ export default function ReviewForm({
             }
 
             // Prepare payload according to backend expectations
-            const payload: any = {
+            const payload: TaskPayload = {
                 title: data.title,
                 description: data.description,
                 work_mode: data.locationType === 'online' ? 'remote' : 'physical',
@@ -132,6 +127,7 @@ export default function ReviewForm({
                     }
                 } catch (e) {
                     // If we can't parse JSON, use status text
+                    console.error('Failed to parse error response:', e);
                     errorMessage = response.statusText || errorMessage;
                 }
 
@@ -153,7 +149,7 @@ export default function ReviewForm({
         country: string;
         area: string;
     }> => {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             if (!window.google || !window.google.maps) {
                 resolve({
                     city: '',
@@ -167,8 +163,8 @@ export default function ReviewForm({
             const geocoder = new window.google.maps.Geocoder();
             const latLng = new window.google.maps.LatLng(lat, lng);
 
-            geocoder.geocode({ location: latLng }, (results: any[], status: string) => {
-                if (status === 'OK' && results[0]) {
+            geocoder.geocode({ location: latLng }, (results: google.maps.GeocoderResult[] | null, status: google.maps.GeocoderStatus) => {
+                if (status === google.maps.GeocoderStatus.OK && results !== null &&  results.length > 0) {
                     const addressComponents = results[0].address_components;
                     const details = {
                         city: '',
