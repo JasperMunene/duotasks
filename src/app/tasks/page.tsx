@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { MapPin, Clock, Calendar, ChevronDown, Filter, SortAsc } from 'lucide-react';
+import { MapPin, Clock, Calendar, ChevronDown, SortAsc } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -16,11 +16,21 @@ import LandingHeader from "@/components/landing/landing-header";
 import CategoryFilter from "@/components/Filter/CategoryFilter";
 import LocationFilter from "@/components/Filter/LocationFilter";
 import PriceFilter from "@/components/Filter/PriceFilter";
+import SortFilter, { type SortOption } from "@/components/Filter/SortFilter";
 import {
     Popover,
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover";
+
+type LocationMode = 'all' | 'remotely' | 'in-person';
+
+interface Location {
+    type: LocationMode;
+    suburb: string;
+    distance: number;
+}
+
 
 const mockTasks = [
     {
@@ -83,11 +93,15 @@ const mockTasks = [
 export default function BrowseTasks() {
     const [searchQuery, setSearchQuery] = useState('');
     const [isCategoryOpen, setIsCategoryOpen] = useState(false);
-    const [location, setLocation] = useState({
-        type: 'all' as const,
+    const [isLocationOpen, setIsLocationOpen] = useState(false)
+    const [isPriceOpen, setIsPriceOpen] = useState(false);
+    const [isSortOpen, setIsSortOpen] = useState(false);
+    const [location, setLocation] = useState<Location>({
+        type: 'all',
         suburb: 'Karen, Nairobi',
         distance: 100,
     });
+    const [sortOption, setSortOption] = useState<SortOption>('recommended');
 
     const [priceRange, setPriceRange] = useState<{ min: number; max: number | null }>({
         min: 0,
@@ -106,6 +120,18 @@ export default function BrowseTasks() {
         if (priceRange.min === 0 && priceRange.max === null) return 'Any price';
         if (priceRange.max === null) return `$${priceRange.min}+`;
         return `$${priceRange.min} - $${priceRange.max}`;
+    };
+
+    const getSortText = () => {
+        switch (sortOption) {
+            case 'recommended': return 'Recommended';
+            case 'recent': return 'Most recent';
+            case 'due-soon': return 'Due soon';
+            case 'closest': return 'Closest';
+            case 'price-low': return 'Lowest price';
+            case 'price-high': return 'Highest price';
+            default: return 'Sort';
+        }
     };
 
 
@@ -132,7 +158,7 @@ export default function BrowseTasks() {
                         <div className="flex gap-2 flex-wrap sm:flex-nowrap">
                             <Popover open={isCategoryOpen} onOpenChange={setIsCategoryOpen}>
                                 <PopoverTrigger asChild>
-                                    <Button variant="outline" className="h-10">
+                                    <Button variant="outline" className="h-10 flex-none min-w-[160px] truncate">
                                         Category <ChevronDown className="ml-2 h-4 w-4" />
                                     </Button>
                                 </PopoverTrigger>
@@ -145,9 +171,9 @@ export default function BrowseTasks() {
                                 </PopoverContent>
                             </Popover>
 
-                            <DropdownMenu>
+                            <DropdownMenu open={isLocationOpen} onOpenChange={setIsLocationOpen}>
                                 <DropdownMenuTrigger asChild>
-                                    <Button variant="outline" className="h-10">
+                                    <Button variant="outline" className="h-10 flex-none min-w-[180px] truncate">
                                         {getLocationText()}
                                         <ChevronDown className="ml-2 h-4 w-4" />
                                     </Button>
@@ -155,17 +181,18 @@ export default function BrowseTasks() {
                                 <DropdownMenuContent side="bottom" align="start" className="p-0">
                                     <LocationFilter
                                         initialValues={location}
-                                        onCancel={() => {/* close menu */}}
+                                        onCancel={() => setIsLocationOpen(false)}
                                         onApply={(newLocation) => {
                                             setLocation(newLocation);
+                                            setIsLocationOpen(false);
                                         }}
                                     />
                                 </DropdownMenuContent>
                             </DropdownMenu>
 
-                            <DropdownMenu>
+                            <DropdownMenu open={isPriceOpen} onOpenChange={setIsPriceOpen}>
                                 <DropdownMenuTrigger asChild>
-                                    <Button variant="outline" className="h-10">
+                                    <Button variant="outline" className="h-10 flex-none min-w-[160px] truncate">
                                         {getPriceText()}
                                         <ChevronDown className="ml-2 h-4 w-4" />
                                     </Button>
@@ -173,23 +200,32 @@ export default function BrowseTasks() {
                                 <DropdownMenuContent side="bottom" align="start" className="p-0">
                                     <PriceFilter
                                         initialValues={priceRange}
-                                        onCancel={() => {/* close menu */}}
+                                        onCancel={() => setIsPriceOpen(false)}
                                         onApply={(newRange) => {
                                             setPriceRange(newRange);
+                                            setIsPriceOpen(false);
                                         }}
                                     />
                                 </DropdownMenuContent>
                             </DropdownMenu>
 
-                            <Button variant="outline" className="h-10">
-                                <Filter className="h-4 w-4 mr-2" />
-                                Other Filters
-                            </Button>
-
-                            <Button variant="outline" className="h-10">
-                                <SortAsc className="h-4 w-4 mr-2" />
-                                Sort
-                            </Button>
+                            <DropdownMenu open={isSortOpen} onOpenChange={setIsSortOpen}>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="outline" className="h-10 flex-none min-w-[160px] truncate">
+                                        <SortAsc className="h-4 w-4 mr-2" />
+                                        {getSortText()}
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent side="bottom" align="start" className="p-0">
+                                    <SortFilter
+                                        initialValue={sortOption}
+                                        onApply={(option) => {
+                                            setSortOption(option);
+                                            setIsSortOpen(false);
+                                        }}
+                                    />
+                                </DropdownMenuContent>
+                            </DropdownMenu>
                         </div>
                     </div>
                 </div>
