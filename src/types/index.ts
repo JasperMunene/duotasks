@@ -5,7 +5,7 @@ export interface Category {
 }
 
 export interface ApiCategory {
-    id: number | string;  // match whatever your API actually uses
+    id: number | string;
     name: string;
     icon: string;
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -27,12 +27,28 @@ export default function CategoryFilter({
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedCategories, setSelectedCategories] = useState<string[]>(initialSelected);
 
+    // Filter out uncategorized and apply search
+    const filteredCategories = useMemo(() => {
+        const searchLower = searchQuery.toLowerCase();
+        return categories.filter(category =>
+            category.name.toLowerCase().includes(searchLower)
+        );
+    }, [categories, searchQuery]);
+
     // Fetch categories from API
     useEffect(() => {
         const loadCategories = async () => {
             try {
                 const data = await fetchCategories();
                 setCategories(data);
+
+                // Clean initial selection from uncategorized if present
+                if (initialSelected.length > 0) {
+                    const validIds = data.map(c => c.id);
+                    setSelectedCategories(prev =>
+                        prev.filter(id => validIds.includes(id))
+                    );
+                }
             } catch (err) {
                 setError('Failed to load categories. Please try again later.');
                 console.error(err);
@@ -42,11 +58,7 @@ export default function CategoryFilter({
         };
 
         loadCategories();
-    }, []);
-
-    const filteredCategories = categories.filter(category =>
-        category.name.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    }, [initialSelected]);
 
     const handleToggleCategory = (categoryId: string) => {
         setSelectedCategories(prev =>
