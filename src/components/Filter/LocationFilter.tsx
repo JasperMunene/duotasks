@@ -10,13 +10,13 @@ import { Loader2 } from 'lucide-react';
 interface LocationFilterProps {
     onApply: (data: {
         type: 'in-person' | 'remotely' | 'all';
-        suburb: string;
+        town: string;
         distance: number;
     }) => void;
     onCancel: () => void;
     initialValues?: {
         type: 'in-person' | 'remotely' | 'all';
-        suburb: string;
+        town: string;
         distance: number;
     };
 }
@@ -26,12 +26,12 @@ export default function LocationFilter({
                                            onCancel,
                                            initialValues = {
                                                type: 'all',
-                                               suburb: '',
+                                               town: '',
                                                distance: 100,
                                            },
                                        }: LocationFilterProps) {
     const [locationType, setLocationType] = useState<'in-person' | 'remotely' | 'all'>(initialValues.type);
-    const [suburb, setSuburb] = useState(initialValues.suburb);
+    const [town, setTown] = useState(initialValues.town);
     const [distance, setDistance] = useState(initialValues.distance);
     const [suggestions, setSuggestions] = useState<string[]>([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
@@ -39,6 +39,7 @@ export default function LocationFilter({
     const [apiError, setApiError] = useState<string | null>(null);
 
     const debounceRef = useRef<number | undefined>(undefined);
+
 
     const fetchSuggestions = async (query: string) => {
         if (!query.trim()) return;
@@ -52,22 +53,27 @@ export default function LocationFilter({
                 new URLSearchParams({
                     access_token: process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN || '',
                     country: 'ke',
-                    types: 'place,locality,neighborhood',
+                    types: 'place',
                     autocomplete: 'true',
                     limit: '5'
                 })
             );
 
             if (!response.ok) {
-                throw new Error(`Mapbox API error: ${response.status} ${response.statusText}`);
+                throw new Error(`API error: ${response.status} ${response.statusText}`);
             }
 
             const data = await response.json();
-            setSuggestions(data.features.map((feature: any) => feature.place_name));
+            const townSuggestions = data.features.map((feature: any) => {
+                // Extract only the town name from place_name (e.g. "Nairobi, Kenya" -> "Nairobi")
+                return feature.text || feature.place_name.split(',')[0];
+            });
+
+            setSuggestions(townSuggestions);
             setShowSuggestions(true);
         } catch (error) {
-            console.error('Mapbox API error:', error);
-            setApiError('Failed to fetch location suggestions');
+            console.error('API error:', error);
+            setApiError('Failed to fetch town suggestions');
             setSuggestions([]);
         } finally {
             setIsLoading(false);
@@ -76,7 +82,7 @@ export default function LocationFilter({
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
-        setSuburb(value);
+        setTown(value);
         setApiError(null);
 
         if (debounceRef.current) {
@@ -92,14 +98,14 @@ export default function LocationFilter({
     };
 
     const handleSelectSuggestion = (suggestion: string) => {
-        setSuburb(suggestion);
+        setTown(suggestion);
         setShowSuggestions(false);
     };
 
     const handleApply = () => {
         onApply({
             type: locationType,
-            suburb,
+            town,
             distance,
         });
     };
@@ -132,17 +138,16 @@ export default function LocationFilter({
                         </Button>
                     ))}
                 </div>
-                {/* Suburb Input with Suggestions */}
+                {/* Town Input with Suggestions */}
                 <div className="space-y-2 relative">
-                    <label className="text-sm font-medium text-slate-700">SUBURB IN KENYA</label>
+                    <label className="text-sm font-medium text-slate-700">Town</label>
                     <div className="relative">
                         <Input
                             type="text"
-                            value={suburb}
+                            value={town}
                             onChange={handleInputChange}
                             className="w-full pr-10"
-                            placeholder="Enter suburb in Kenya"
-                            onFocus={() => suburb.trim().length > 1 && setShowSuggestions(true)}
+                            placeholder="Nairobi, Mombasa, Nakuru..."
                         />
                         {isLoading && (
                             <div className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -150,9 +155,12 @@ export default function LocationFilter({
                             </div>
                         )}
                     </div>
+
+
+
                     {apiError && (
                         <div className="text-red-500 text-xs mt-1">
-                            {apiError} - Verify Mapbox access token
+                            {apiError}
                         </div>
                     )}
                     {showSuggestions && suggestions.length > 0 && (
@@ -168,9 +176,9 @@ export default function LocationFilter({
                             ))}
                         </div>
                     )}
-                    {showSuggestions && suggestions.length === 0 && suburb.length > 1 && !isLoading && (
+                    {showSuggestions && suggestions.length === 0 && town.length > 1 && !isLoading && (
                         <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-md shadow-lg px-4 py-2 text-sm text-slate-500">
-                            No locations found in Kenya
+                            No major Kenyan towns found
                         </div>
                     )}
                 </div>
@@ -187,6 +195,9 @@ export default function LocationFilter({
                         step={1}
                         className="[&_[role=slider]]:h-4 [&_[role=slider]]:w-4"
                     />
+                    <p className="text-xs text-slate-500">
+                        Distance applies only to in-person locations
+                    </p>
                 </div>
             </div>
             <div className="p-4 border-t border-slate-200 flex justify-between">
