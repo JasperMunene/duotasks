@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
@@ -19,6 +19,15 @@ interface LocationFilterProps {
         town: string;
         distance: number;
     };
+}
+
+interface MapboxPlace {
+    text?: string;
+    place_name: string;
+}
+
+interface MapboxResponse {
+    features: MapboxPlace[];
 }
 
 export default function LocationFilter({
@@ -63,8 +72,8 @@ export default function LocationFilter({
                 throw new Error(`API error: ${response.status} ${response.statusText}`);
             }
 
-            const data = await response.json();
-            const townSuggestions = data.features.map((feature: any) => {
+            const data = await response.json() as MapboxResponse;
+            const townSuggestions = data.features.map((feature) => {
                 // Extract only the town name from place_name (e.g. "Nairobi, Kenya" -> "Nairobi")
                 return feature.text || feature.place_name.split(',')[0];
             });

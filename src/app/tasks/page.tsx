@@ -27,7 +27,7 @@ type LocationMode = "all" | "remotely" | "in-person";
 
 interface Location {
   type: LocationMode;
-  suburb: string;
+  town: string;
   distance: number;
 }
 
@@ -103,7 +103,7 @@ export default function BrowseTasks() {
   const [isSortOpen, setIsSortOpen] = useState(false);
   const [location, setLocation] = useState<Location>({
     type: "all",
-    suburb: "",
+    town: "",
     distance: 100,
   });
   const [sortOption, setSortOption] = useState<SortOption>("recommended");
@@ -119,8 +119,8 @@ export default function BrowseTasks() {
   const getLocationText = () => {
     if (location.type === "remotely") return "Remote only";
     if (location.type === "all")
-      return `${location.distance}km+ ${location.suburb} & remotely`;
-    return `${location.distance}km+ ${location.suburb}`;
+      return `${location.distance}km+ ${location.town} & remotely`;
+    return `${location.distance}km+ ${location.town}`;
   };
 
   const getPriceText = () => {
