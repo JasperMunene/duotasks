@@ -103,7 +103,7 @@ export default function BrowseTasks() {
   const [isSortOpen, setIsSortOpen] = useState(false);
   const [location, setLocation] = useState<Location>({
     type: "all",
-    suburb: "Karen, Nairobi",
+    suburb: "",
     distance: 100,
   });
   const [sortOption, setSortOption] = useState<SortOption>("recommended");
