@@ -1,7 +1,19 @@
 import { useRef, useEffect, useState } from 'react';
 
+interface Task {
+    id: number;
+    title: string;
+    position: {
+        lat: number;
+        lng: number;
+    };
+}
 
-export default function TaskMap() {
+interface TaskMapProps {
+    tasks: Task[];
+}
+
+export default function TaskMap({ tasks }: TaskMapProps) {
     const mapContainer = useRef<HTMLDivElement>(null);
     const mapInstance = useRef<google.maps.Map | null>(null);
     const [mapLoaded, setMapLoaded] = useState(false);
@@ -40,9 +52,9 @@ export default function TaskMap() {
 
         // Initialize the map
         mapInstance.current = new window.google.maps.Map(mapContainer.current, {
-            center: { lat: 1.2921, lng: 36.8219 },
+            center: { lat: -1.2921, lng: 36.8219 },
             zoom: 10,
-            mapId: '923c89c476068ebefa09a522',
+            mapId: '',
             disableDefaultUI: true,
             styles: [
                 {
@@ -57,17 +69,18 @@ export default function TaskMap() {
             ]
         });
 
-        // Add custom markers
-        const markers = [
-            { position: { lat: -1.2921, lng: 36.8219 }, title: 'Marker 1' },
-            { position: { lat: -1.3000, lng: 36.8319 }, title: 'Marker 2' },
-        ];
+        setMapLoaded(true);
+    };
 
-        markers.forEach(({ position, title }) => {
+    useEffect(() => {
+        if (!mapInstance.current || !mapLoaded) return;
+
+        // Add markers for each task
+        tasks.forEach((task) => {
             new window.google.maps.Marker({
-                position,
+                position: task.position,
                 map: mapInstance.current,
-                title,
+                title: task.title,
                 icon: {
                     url: '/map-pin.svg',
                     scaledSize: new window.google.maps.Size(35, 45),
@@ -76,8 +89,22 @@ export default function TaskMap() {
             });
         });
 
-        setMapLoaded(true);
-    };
+        // Adjust view to show all markers
+        if (tasks.length > 0) {
+            const bounds = new window.google.maps.LatLngBounds();
+            tasks.forEach(task => bounds.extend(task.position));
+            mapInstance.current.fitBounds(bounds);
+
+            // Prevent excessive zoom for single markers
+            if (tasks.length === 1) {
+                mapInstance.current.setZoom(14);
+            }
+        } else {
+            // Default view if no tasks
+            mapInstance.current.setCenter({ lat: -1.2921, lng: 36.8219 });
+            mapInstance.current.setZoom(10);
+        }
+    }, [tasks, mapLoaded]);
 
     return (
         <div className="w-full h-full rounded-lg bg-slate-100 border border-slate-200">

@@ -15,6 +15,28 @@ import {
 import TaskMap from '@/components/Task/TaskMap';
 import LandingHeader from "@/components/landing/landing-header";
 
+// define the same shape TaskMap expects
+interface MapTaskPlaceholder {
+    id: number
+    title: string
+    position: { lat: number; lng: number }
+}
+
+// two dummy markers
+const placeholderMapTasks: MapTaskPlaceholder[] = [
+    {
+        id: 1,
+        title: 'Fix my leaking tap',
+        position: { lat: -31.9523, lng: 115.8613 },  // Perth
+    },
+    {
+        id: 2,
+        title: 'House Cleaning',
+        position: { lat: -1.286389, lng: 36.817223 }, // Nairobi
+    },
+];
+
+
 const mockTasks = {
     posted: [
         {
@@ -62,6 +84,7 @@ const mockTasks = {
 
 export default function MyTasks() {
     const [searchQuery, setSearchQuery] = useState('');
+    const [mapTasks] = useState<MapTaskPlaceholder[]>(placeholderMapTasks);
     const TaskList = ({ tasks }: { tasks: typeof mockTasks.posted }) => (
         <div className="space-y-4">
             {tasks.map((task) => (
@@ -168,7 +191,7 @@ export default function MyTasks() {
 
                     {/* Map */}
                     <div className="hidden lg:block h-[calc(100vh-12rem)] sticky top-24">
-                        <TaskMap />
+                        <TaskMap tasks={mapTasks} />
                     </div>
                 </div>
             </div>
