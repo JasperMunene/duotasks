@@ -29,6 +29,7 @@ import {
     DialogTitle,
     DialogTrigger,
 } from '@/components/ui/dialog';
+import LandingHeader from "@/components/landing/landing-header";
 
 interface PaymentMethod {
     id: string;
@@ -104,6 +105,7 @@ export default function PaymentMethodsPage() {
 
     return (
         <div className="min-h-screen bg-slate-50">
+            <LandingHeader />
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 {/* Header */}
                 <div className="flex items-center gap-4 mb-8">
